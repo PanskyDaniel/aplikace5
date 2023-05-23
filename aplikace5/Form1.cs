@@ -18,10 +18,13 @@ namespace Aplikace5
         private List<string> selectedFilePaths;
         private DateTime posledniDatumKontroly;
         private const int defaultInterval = 60;
+        private bool inicializace = false;
 
         public Form1()
         {
+            inicializace = true;
             InitializeComponent();
+            inicializace = false;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -82,7 +85,8 @@ namespace Aplikace5
                 int rowCount = GetLineCount(soubor);
                 string pocetRadku = rowCount.ToString();
 
-                Seznam.Rows.Add(cesta, nazev, velikost, posledniZmena, pocetRadku);
+                Seznam.Rows.Add(cesta, nazev, velikost, posledniZmena, pocetRadku, "", "", false); // Přidáme sloupec pro checkbox
+
             }
         }
 
@@ -138,9 +142,10 @@ namespace Aplikace5
                 string strMaxPocetRadku = (string)row.Cells["MaxPocetRadku"].Value;
                 string strVelikost = (string)row.Cells["Velikost"].Value;
                 string strMaxVelikost = (string)row.Cells["MaxVelikost"].Value;
+                bool shouldCheck = (bool)row.Cells["ZmenaTest"].Value; // Získáme hodnotu checkboxu pro daný řádek
 
                 DateTime filemodify = File.GetLastWriteTime(Path.Combine(cesta, nazev));
-                if (filemodify > posledniDatumKontroly) //soubor byl od poslední kontroly změněn
+                if (filemodify > posledniDatumKontroly || shouldCheck)
                 {
 
                     if (double.TryParse(strVelikost, out fileLengthMB) && double.TryParse(strMaxVelikost, out maxFileSizeMB))
@@ -168,9 +173,11 @@ namespace Aplikace5
                 row.Cells["Velikost"].Value = fileLengthMB.ToString("0.###");
 
                 row.Cells["PosledniZmena"].Value = filemodify.ToString("dd.MM.yyyy HH:mm:ss");
+                row.Cells[ZmenaTest.Index].Value = false;
             }
 
             posledniDatumKontroly = DateTime.Now;
+            PosDatKont.Text = posledniDatumKontroly.ToString("dd.MM.yyyy.HH:mm:ss");
         }
 
         private void NastavInterval_Click(object sender, EventArgs e)
@@ -178,10 +185,15 @@ namespace Aplikace5
             int interval = 0;
             if (int.TryParse(IntervalTextBox.Text, out interval))
             {
+                if (interval == 0)
+                {
+                    MessageBox.Show("Interval nesmí být 0 nula!");
+                    return;
+                }
+
                 timer.Stop();
                 timer.Interval = interval * 1000;
                 timer.Start();
-
             }
         }
 
@@ -190,6 +202,26 @@ namespace Aplikace5
             Log.SelectionStart = Log.TextLength;
             Log.ScrollToCaret();
         }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Seznam_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void Seznam_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (inicializace)
+                return;
+
+            if (e.ColumnIndex == MaxPocetRadku.Index || e.ColumnIndex == MaxVelikost.Index)
+            {
+                Seznam.Rows[e.RowIndex].Cells[ZmenaTest.Index].Value = true;
+            }
+        }
     }
 }
-
