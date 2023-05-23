@@ -85,8 +85,7 @@ namespace Aplikace5
                 int rowCount = GetLineCount(soubor);
                 string pocetRadku = rowCount.ToString();
 
-                Seznam.Rows.Add(cesta, nazev, velikost, posledniZmena, pocetRadku, "", "", false); // Přidáme sloupec pro checkbox
-
+                Seznam.Rows.Add(cesta, nazev, velikost, posledniZmena, pocetRadku, "", "", false);
             }
         }
 
@@ -221,6 +220,36 @@ namespace Aplikace5
             if (e.ColumnIndex == MaxPocetRadku.Index || e.ColumnIndex == MaxVelikost.Index)
             {
                 Seznam.Rows[e.RowIndex].Cells[ZmenaTest.Index].Value = true;
+            }
+        }
+        private Stack<DataGridViewRow> smazaneRadky = new Stack<DataGridViewRow>();
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (Seznam.SelectedRows.Count > 0)
+            {
+                int rowIndex = Seznam.SelectedRows[0].Index;
+
+                DialogResult dr = MessageBox.Show("Opravdu chcete odstranit soubor?", "Upozornění", MessageBoxButtons.YesNo);
+
+                switch (dr)
+                {
+                    case DialogResult.Yes:
+                        DataGridViewRow deletedRow = Seznam.Rows[rowIndex];
+                        smazaneRadky.Push(deletedRow);
+                        Seznam.Rows.RemoveAt(rowIndex);
+                        break;
+                    case DialogResult.No:
+                        break;
+                }
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            if (smazaneRadky.Count > 0)
+            {
+                DataGridViewRow restoredRow = smazaneRadky.Pop();
+                Seznam.Rows.Add(restoredRow);
             }
         }
     }
